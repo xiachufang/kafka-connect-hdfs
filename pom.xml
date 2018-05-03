@@ -140,31 +140,31 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArguments>
-                        <Xlint:all/>
-                        <!-- bootstrap class path not set in conjunction with -source 1.7 -->
-                        <Xlint:-options/>
-                        <!-- serializable class ... has no definition of serialVersionUID -->
-                        <Xlint:-serial/>
-                        <!-- bad path element ".../repository/org/apache/derby/derby/10.10.2.0/derbyLocale_*.jar": no such file or directory -->
-                        <Xlint:-path/>
-                        <!--
-                        WALFile.java:[333,16] [deprecation] sync() in Syncable has been deprecated
-                        Apparently SuppressWarnings("deprecation") doesn't cover this on JDK 7
-                        -->
-                        <Xlint:-deprecation/>
-                        <!-- Needed for DataWriter.java because @SuppressWarnings("unchecked") doesn't cover this on JDK 7 -->
-                        <Xlint:-unchecked/>
-                        <Werror/>
-                    </compilerArguments>
-                    <showWarnings>true</showWarnings>
-                    <showDeprecation>false</showDeprecation>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-compiler-plugin</artifactId>-->
+                <!--<configuration>-->
+                    <!--<compilerArguments>-->
+                        <!--<Xlint:all/>-->
+                        <!--&lt;!&ndash; bootstrap class path not set in conjunction with -source 1.7 &ndash;&gt;-->
+                        <!--<Xlint:-options/>-->
+                        <!--&lt;!&ndash; serializable class ... has no definition of serialVersionUID &ndash;&gt;-->
+                        <!--<Xlint:-serial/>-->
+                        <!--&lt;!&ndash; bad path element ".../repository/org/apache/derby/derby/10.10.2.0/derbyLocale_*.jar": no such file or directory &ndash;&gt;-->
+                        <!--<Xlint:-path/>-->
+                        <!--&lt;!&ndash;-->
+                        <!--WALFile.java:[333,16] [deprecation] sync() in Syncable has been deprecated-->
+                        <!--Apparently SuppressWarnings("deprecation") doesn't cover this on JDK 7-->
+                        <!--&ndash;&gt;-->
+                        <!--<Xlint:-deprecation/>-->
+                        <!--&lt;!&ndash; Needed for DataWriter.java because @SuppressWarnings("unchecked") doesn't cover this on JDK 7 &ndash;&gt;-->
+                        <!--<Xlint:-unchecked/>-->
+                        <!--<Werror/>-->
+                    <!--</compilerArguments>-->
+                    <!--<showWarnings>true</showWarnings>-->
+                    <!--<showDeprecation>false</showDeprecation>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.5.3</version>
@@ -223,6 +223,37 @@
                         </fileset>
                     </filesets>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                    </transformers>
+                    <artifactSet>
+                    </artifactSet>
+                    <minimizeJar>false</minimizeJar>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
