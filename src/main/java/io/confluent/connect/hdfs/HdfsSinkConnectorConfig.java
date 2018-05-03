@@ -112,6 +112,17 @@ public class HdfsSinkConnectorConfig extends StorageSinkConnectorConfig {
   private static final String KERBEROS_TICKET_RENEW_PERIOD_MS_DISPLAY = "Kerberos Ticket Renew "
       + "Period (ms)";
 
+  public static final String HIVE_TABLE_NAME_REGEX_CONFIG = "hive.table.name.regex";
+  public static final String HIVE_TABLE_NAME_REGEX_DEFAULT = null;
+  private static final String HIVE_TABLE_NAME_REGEX_DOC = "";
+  private static final String HIVE_TABLE_NAME_REGEX_DISPLAY = "";
+
+  public static final String HIVE_TABLE_NAME_REPLACEMENT_CONFIG = "hive.table.name.replacement";
+  public static final String HIVE_TABLE_NAME_REPLACEMENT_DEFAULT = null;
+  private static final String HIVE_TABLE_NAME_REPLACEMENT_DOC = "";
+  private static final String HIVE_TABLE_NAME_REPLACEMENT_DISPLAY = "";
+
+
   private static final ConfigDef.Recommender hdfsAuthenticationKerberosDependentsRecommender =
       new BooleanParentRecommender(
           HDFS_AUTHENTICATION_KERBEROS_CONFIG);
@@ -138,6 +149,30 @@ public class HdfsSinkConnectorConfig extends StorageSinkConnectorConfig {
             FieldPartitioner.class
         )
     );
+  }
+
+  public static void extendHiveExtraConfigDef(ConfigDef configDef) {
+    configDef.define(
+            HIVE_TABLE_NAME_REGEX_CONFIG,
+            Type.STRING,
+            HIVE_TABLE_NAME_REGEX_DEFAULT,
+            Importance.LOW,
+            HIVE_TABLE_NAME_REGEX_DOC,
+            "hive_extra",
+            1,
+            Width.SHORT,
+            HIVE_TABLE_NAME_REGEX_DISPLAY);
+
+    configDef.define(
+            HIVE_TABLE_NAME_REPLACEMENT_CONFIG,
+            Type.STRING,
+            HIVE_TABLE_NAME_REPLACEMENT_DEFAULT,
+            Importance.LOW,
+            HIVE_TABLE_NAME_REPLACEMENT_DOC,
+            "hive_extra",
+            2,
+            Width.SHORT,
+            HIVE_TABLE_NAME_REPLACEMENT_DISPLAY);
   }
 
   public static ConfigDef newConfigDef() {
@@ -271,7 +306,10 @@ public class HdfsSinkConnectorConfig extends StorageSinkConnectorConfig {
           KERBEROS_TICKET_RENEW_PERIOD_MS_DISPLAY,
           hdfsAuthenticationKerberosDependentsRecommender
       );
+      extendHiveExtraConfigDef(configDef);
     }
+
+
     // Put the storage group(s) last ...
     ConfigDef storageConfigDef = StorageSinkConnectorConfig.newConfigDef(FORMAT_CLASS_RECOMMENDER);
     for (ConfigDef.ConfigKey key : storageConfigDef.configKeys().values()) {
