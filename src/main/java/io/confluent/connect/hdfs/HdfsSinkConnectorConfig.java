@@ -112,12 +112,12 @@ public class HdfsSinkConnectorConfig extends StorageSinkConnectorConfig {
   private static final String KERBEROS_TICKET_RENEW_PERIOD_MS_DISPLAY = "Kerberos Ticket Renew "
       + "Period (ms)";
 
-  public static final String HIVE_TABLE_NAME_REGEX_CONFIG = "hive.table.name.regex";
+  public static final String HIVE_TABLE_NAME_REGEX_CONFIG = "hive.table.map.regex";
   public static final String HIVE_TABLE_NAME_REGEX_DEFAULT = null;
   private static final String HIVE_TABLE_NAME_REGEX_DOC = "";
   private static final String HIVE_TABLE_NAME_REGEX_DISPLAY = "";
 
-  public static final String HIVE_TABLE_NAME_REPLACEMENT_CONFIG = "hive.table.name.replacement";
+  public static final String HIVE_TABLE_NAME_REPLACEMENT_CONFIG = "hive.table.map.replacement";
   public static final String HIVE_TABLE_NAME_REPLACEMENT_DEFAULT = null;
   private static final String HIVE_TABLE_NAME_REPLACEMENT_DOC = "";
   private static final String HIVE_TABLE_NAME_REPLACEMENT_DISPLAY = "";
