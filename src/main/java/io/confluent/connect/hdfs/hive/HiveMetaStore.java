@@ -19,14 +19,47 @@ import io.confluent.connect.hdfs.errors.HiveMetaStoreException;
 
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Deprecated
 public class HiveMetaStore extends io.confluent.connect.storage.hive.HiveMetaStore {
+
+  private Configuration conf;
+  private HdfsSinkConnectorConfig connectorConfig;
+  private Pattern tableNameConverterRegex;
+  private String tableNameConverterReplacement;
+
 
   public HiveMetaStore(
       Configuration conf,
       HdfsSinkConnectorConfig connectorConfig
   ) throws HiveMetaStoreException {
     super(conf, connectorConfig);
+    this.conf = conf;
+    this.connectorConfig = connectorConfig;
+
+    String regexConfig = connectorConfig.getString(
+            HdfsSinkConnectorConfig.HIVE_TABLE_NAME_REGEX_CONFIG);
+    if (regexConfig != null) {
+      tableNameConverterRegex = Pattern.compile(regexConfig);
+      tableNameConverterReplacement = connectorConfig.getString(
+              HdfsSinkConnectorConfig.HIVE_TABLE_NAME_REPLACEMENT_CONFIG);
+    }
   }
 
+  public String tableNameConverter(String table) {
+
+    if (table == null) {
+      return table;
+    }
+
+    if (tableNameConverterRegex != null) {
+      Matcher matcher = tableNameConverterRegex.matcher(table);
+      if (matcher.matches()) {
+        return matcher.replaceFirst(tableNameConverterReplacement);
+      }
+    }
+    return table.replaceAll("[.-]", "_");
+  }
 }
