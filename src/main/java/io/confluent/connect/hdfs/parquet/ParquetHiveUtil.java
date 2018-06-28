@@ -55,7 +55,7 @@ public class ParquetHiveUtil extends HiveUtil {
     Table table = hiveMetaStore.getTable(database, tableName);
     List<FieldSchema> columns = HiveSchemaConverter.convertSchema(schema);
     List<FieldSchema> partitions = table.getPartCols();
-    for (FieldSchema partition: partitions){
+    for (FieldSchema partition: partitions) {
       for (FieldSchema column: columns) {
         if (partition.getName().equals(column.getName())) {
           columns.remove(column);
