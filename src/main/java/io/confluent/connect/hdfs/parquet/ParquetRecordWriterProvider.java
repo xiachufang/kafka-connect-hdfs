@@ -66,7 +66,8 @@ public class ParquetRecordWriterProvider
           try {
             log.info("Opening record writer for: {}", filename);
             org.apache.avro.Schema avroSchema = avroData.fromConnectSchema(schema);
-            org.apache.avro.Schema logicalTypeAvroSchema = AvroDataUtil.addLogicalTypeTo(avroSchema);
+            org.apache.avro.Schema logicalTypeAvroSchema =
+                    AvroDataUtil.addLogicalTypeTo(avroSchema);
 
             writer = new AvroParquetWriter<>(
                 path,
