@@ -160,9 +160,16 @@ public class HiveIntegrationParquetTest extends HiveTestBase {
     hdfsWriter.stop();
 
     Table table = hiveMetaStore.getTable(hiveDatabase, TOPIC);
+    String partitionFieldName = connectorConfig.getString(
+            PartitionerConfig.PARTITION_FIELD_NAME_CONFIG
+    );
 
     List<String> expectedColumnNames = new ArrayList<>();
     for (Field field : schema.fields()) {
+      // ignore partition field
+      if (field.name().equals(partitionFieldName)) {
+        continue;
+      }
       expectedColumnNames.add(field.name());
     }
 
@@ -172,9 +179,7 @@ public class HiveIntegrationParquetTest extends HiveTestBase {
     }
     assertEquals(expectedColumnNames, actualColumnNames);
 
-    String partitionFieldName = connectorConfig.getString(
-        PartitionerConfig.PARTITION_FIELD_NAME_CONFIG
-    );
+
     String directory1 = TOPIC + "/" + partitionFieldName + "=" + String.valueOf(16);
     String directory2 = TOPIC + "/" + partitionFieldName + "=" + String.valueOf(17);
     String directory3 = TOPIC + "/" + partitionFieldName + "=" + String.valueOf(18);
@@ -193,6 +198,10 @@ public class HiveIntegrationParquetTest extends HiveTestBase {
       for (int j = 0; j < 3; ++j) {
         List<String> result = new ArrayList<>();
         for (Field field : schema.fields()) {
+          // ignore partition field
+          if (field.name().equals(partitionFieldName)) {
+            continue;
+          }
           result.add(String.valueOf(records.get(i).get(field.name())));
         }
         expectedResults.add(result);
