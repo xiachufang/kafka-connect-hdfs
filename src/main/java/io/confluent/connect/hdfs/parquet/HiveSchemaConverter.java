@@ -18,7 +18,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
-import org.apache.kafka.connect.data.*;
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.Field;
+import org.apache.kafka.connect.data.Decimal;
+
+
 import org.apache.kafka.connect.data.Schema.Type;
 
 import java.util.ArrayList;
@@ -27,89 +31,98 @@ import java.util.List;
 import java.util.Map;
 
 public class HiveSchemaConverter {
+  private static final Map<Type, TypeInfo> TYPE_TO_TYPEINFO;
 
-    private static final Map<Type, TypeInfo> TYPE_TO_TYPEINFO;
+  static {
+    TYPE_TO_TYPEINFO = new HashMap<>();
+    TYPE_TO_TYPEINFO.put(Type.BOOLEAN, TypeInfoFactory.booleanTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.INT8, TypeInfoFactory.byteTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.INT16, TypeInfoFactory.shortTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.INT32, TypeInfoFactory.intTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.INT64, TypeInfoFactory.longTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.FLOAT32, TypeInfoFactory.floatTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.FLOAT64, TypeInfoFactory.doubleTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.BYTES, TypeInfoFactory.binaryTypeInfo);
+    TYPE_TO_TYPEINFO.put(Type.STRING, TypeInfoFactory.stringTypeInfo);
+  }
 
-    static {
-        TYPE_TO_TYPEINFO = new HashMap<>();
-        TYPE_TO_TYPEINFO.put(Type.BOOLEAN, TypeInfoFactory.booleanTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.INT8, TypeInfoFactory.byteTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.INT16, TypeInfoFactory.shortTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.INT32, TypeInfoFactory.intTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.INT64, TypeInfoFactory.longTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.FLOAT32, TypeInfoFactory.floatTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.FLOAT64, TypeInfoFactory.doubleTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.BYTES, TypeInfoFactory.binaryTypeInfo);
-        TYPE_TO_TYPEINFO.put(Type.STRING, TypeInfoFactory.stringTypeInfo);
+  public static List<FieldSchema> convertSchema(Schema schema) {
+    List<FieldSchema> columns = new ArrayList<>();
+    if (Schema.Type.STRUCT.equals(schema.type())) {
+      for (Field field : schema.fields()) {
+        columns.add(new FieldSchema(
+                field.name(), convert(field.schema()).getTypeName(), field.schema().doc()));
+      }
     }
+    return columns;
+  }
 
-    public static List<FieldSchema> convertSchema(Schema schema) {
-        List<FieldSchema> columns = new ArrayList<>();
-        if (Schema.Type.STRUCT.equals(schema.type())) {
-            for (Field field: schema.fields()) {
-                columns.add(new FieldSchema(
-                        field.name(), convert(field.schema()).getTypeName(), field.schema().doc()));
-            }
+  public static TypeInfo convert(Schema schema) {
+    // TODO: throw an error on recursive types
+    switch (schema.type()) {
+      case STRUCT:
+        return convertStruct(schema);
+      case ARRAY:
+        return convertArray(schema);
+      case MAP:
+        return convertMap(schema);
+      default:
+        return convertPrimitive(schema);
+    }
+  }
+
+  public static TypeInfo convertStruct(Schema schema) {
+    final List<Field> fields = schema.fields();
+    final List<String> names = new ArrayList<>(fields.size());
+    final List<TypeInfo> types = new ArrayList<>(fields.size());
+    for (Field field : fields) {
+      names.add(field.name());
+      types.add(convert(field.schema()));
+    }
+    return TypeInfoFactory.getStructTypeInfo(names, types);
+  }
+
+  public static TypeInfo convertArray(Schema schema) {
+    return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema()));
+  }
+
+  public static TypeInfo convertMap(Schema schema) {
+    return TypeInfoFactory.getMapTypeInfo(
+            convert(schema.keySchema()), convert(schema.valueSchema()));
+  }
+
+  public static TypeInfo convertPrimitive(Schema schema) {
+
+    switch (schema.name() == null ? "" : schema.name()) {
+      case Decimal.LOGICAL_NAME: {
+        String scaleString = schema.parameters().get(Decimal.SCALE_FIELD);
+        if (scaleString == null) {
+          scaleString = "2";
         }
-        return columns;
-    }
 
-    public static TypeInfo convert(Schema schema) {
-        // TODO: throw an error on recursive types
-        switch (schema.type()) {
-            case STRUCT:
-                return convertStruct(schema);
-            case ARRAY:
-                return convertArray(schema);
-            case MAP:
-                return convertMap(schema);
-            default:
-                return convertPrimitive(schema);
+        String precisionString = schema.parameters().get("connect.decimal.precision");
+        if (precisionString != null) {
+          return new DecimalTypeInfo(Integer.parseInt(precisionString),
+                  Integer.parseInt(scaleString));
+        } else {
+          return new DecimalTypeInfo(32, Integer.parseInt(scaleString));
         }
+      }
+//      ignore date/timestamp/time type
+//      make spark v2.0.1 & hive v1.1.0 happy
+//
+//      case Date.LOGICAL_NAME: {
+//        return TypeInfoFactory.dateTypeInfo;
+//      }
+//      case Timestamp.LOGICAL_NAME: {
+//        return TypeInfoFactory.timestampTypeInfo;
+//      }
+//      case Time.LOGICAL_NAME: {
+//        return TypeInfoFactory.intervalDayTimeTypeInfo;
+//      }
+      default: {
+        return TYPE_TO_TYPEINFO.get(schema.type());
+      }
     }
-
-    public static TypeInfo convertStruct(Schema schema) {
-        final List<Field> fields = schema.fields();
-        final List<String> names = new ArrayList<>(fields.size());
-        final List<TypeInfo> types = new ArrayList<>(fields.size());
-        for (Field field : fields) {
-            names.add(field.name());
-            types.add(convert(field.schema()));
-        }
-        return TypeInfoFactory.getStructTypeInfo(names, types);
-    }
-
-    public static TypeInfo convertArray(Schema schema) {
-        return TypeInfoFactory.getListTypeInfo(convert(schema.valueSchema()));
-    }
-
-    public static TypeInfo convertMap(Schema schema) {
-        return TypeInfoFactory.getMapTypeInfo(
-                convert(schema.keySchema()), convert(schema.valueSchema()));
-    }
-
-    public static TypeInfo convertPrimitive(Schema schema) {
-
-        switch (schema.name()) {
-            case Date.LOGICAL_NAME: {
-                return TypeInfoFactory.dateTypeInfo;
-            }
-            case Decimal.LOGICAL_NAME: {
-                String scaleString = schema.parameters().get(Decimal.SCALE_FIELD);
-                if (scaleString != null) {
-                    return new DecimalTypeInfo(16, Integer.parseInt(scaleString));
-                }
-                // fallback to primitive type
-            }
-            case Timestamp.LOGICAL_NAME: {
-                return TypeInfoFactory.timestampTypeInfo;
-            }
-            case Time.LOGICAL_NAME: {
-                return TypeInfoFactory.intervalDayTimeTypeInfo;
-            }
-            default: {
-                return TYPE_TO_TYPEINFO.get(schema.type());
-            }
-        }
-    }
+  }
 }

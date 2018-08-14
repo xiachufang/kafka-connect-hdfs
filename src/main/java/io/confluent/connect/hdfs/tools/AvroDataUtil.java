@@ -72,6 +72,17 @@ public class AvroDataUtil {
         if (logicalTypeProp == null) {
           return;
         }
+
+        // ignore timestamp/date logical type
+        // make spark v2.0.1 & hive v1.1.0 happy
+        if (logicalTypeProp.equals("timestamp-millis")) {
+          return;
+        } else if (logicalTypeProp.equals("timestamp-micros")) {
+          return;
+        } else if (logicalTypeProp.equals("date")) {
+          return;
+        }
+
         LogicalType logicalType = LogicalTypes.fromSchema(avroSchema);
         logicalType.addToSchema(avroSchema);
       }
