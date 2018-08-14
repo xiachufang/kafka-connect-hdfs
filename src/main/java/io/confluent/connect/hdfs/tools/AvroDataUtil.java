@@ -33,7 +33,7 @@ public class AvroDataUtil {
       return logicalTypeAvroSchemaCache.get(avroSchema);
     }
 
-    // add logicalType to schema
+    // attach logicalType object to the schema
     addLogicalTypeIfRequired(avroSchema);
 
     logicalTypeAvroSchemaCache.put(avroSchema, avroSchema);
