@@ -108,18 +108,18 @@ public class HiveSchemaConverter {
           return new DecimalTypeInfo(32, Integer.parseInt(scaleString));
         }
       }
-//      ignore date/timestamp/time type
-//      make spark v2.0.1 & hive v1.1.0 happy
-//
-//      case Date.LOGICAL_NAME: {
-//        return TypeInfoFactory.dateTypeInfo;
-//      }
-//      case Timestamp.LOGICAL_NAME: {
-//        return TypeInfoFactory.timestampTypeInfo;
-//      }
-//      case Time.LOGICAL_NAME: {
-//        return TypeInfoFactory.intervalDayTimeTypeInfo;
-//      }
+      // ignore date/timestamp/time type
+      //  make spark v2.0.1 & hive v1.1.0 happy
+      //
+      //  case Date.LOGICAL_NAME: {
+      //    return TypeInfoFactory.dateTypeInfo;
+      //  }
+      //  case Timestamp.LOGICAL_NAME: {
+      //    return TypeInfoFactory.timestampTypeInfo;
+      //  }
+      //  case Time.LOGICAL_NAME: {
+      //    return TypeInfoFactory.intervalDayTimeTypeInfo;
+      //  }
       default: {
         return TYPE_TO_TYPEINFO.get(schema.type());
       }

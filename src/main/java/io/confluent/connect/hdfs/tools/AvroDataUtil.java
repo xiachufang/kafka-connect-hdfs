@@ -20,6 +20,7 @@ import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.LogicalTypes;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -75,11 +76,9 @@ public class AvroDataUtil {
 
         // ignore timestamp/date logical type
         // make spark v2.0.1 & hive v1.1.0 happy
-        if (logicalTypeProp.equals("timestamp-millis")) {
-          return;
-        } else if (logicalTypeProp.equals("timestamp-micros")) {
-          return;
-        } else if (logicalTypeProp.equals("date")) {
+        String[] ignoredTypes = new String[] {"timestamp-millis", "timestamp-micros", "date"};
+
+        if (Arrays.asList(ignoredTypes).contains(logicalTypeProp)) {
           return;
         }
 
