@@ -27,21 +27,16 @@ import java.util.HashMap;
 public class AvroDataUtil {
   private static HashMap<Schema, Schema> logicalTypeAvroSchemaCache = new HashMap<>();
 
-  public static Schema addLogicalTypeTo(Schema originalAvroSchema) {
+  public static Schema addLogicalTypeTo(Schema avroSchema) {
 
-    if (logicalTypeAvroSchemaCache.get(originalAvroSchema) != null) {
-      return logicalTypeAvroSchemaCache.get(originalAvroSchema);
+    if (logicalTypeAvroSchemaCache.get(avroSchema) != null) {
+      return logicalTypeAvroSchemaCache.get(avroSchema);
     }
-
-    // copy original avro schema
-    String serializedSchema = originalAvroSchema.toString(false);
-    Schema.Parser parser = new Schema.Parser();
-    Schema avroSchema = parser.parse(serializedSchema);
 
     // add logicalType to schema
     addLogicalTypeIfRequired(avroSchema);
 
-    logicalTypeAvroSchemaCache.put(originalAvroSchema, avroSchema);
+    logicalTypeAvroSchemaCache.put(avroSchema, avroSchema);
 
     return avroSchema;
   }
