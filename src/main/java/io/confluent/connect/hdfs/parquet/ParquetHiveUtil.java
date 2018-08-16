@@ -29,7 +29,6 @@ import io.confluent.connect.hdfs.hive.HiveUtil;
 import io.confluent.connect.hdfs.partitioner.Partitioner;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.errors.HiveMetaStoreException;
-import io.confluent.connect.storage.hive.HiveSchemaConverter;
 
 public class ParquetHiveUtil extends HiveUtil {
   private final String topicsDir;

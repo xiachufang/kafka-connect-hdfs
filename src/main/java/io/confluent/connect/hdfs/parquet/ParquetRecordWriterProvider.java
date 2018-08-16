@@ -14,6 +14,7 @@
 
 package io.confluent.connect.hdfs.parquet;
 
+import io.confluent.connect.hdfs.tools.AvroDataUtil;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hadoop.fs.Path;
 import org.apache.kafka.connect.data.Schema;
@@ -65,9 +66,12 @@ public class ParquetRecordWriterProvider
           try {
             log.info("Opening record writer for: {}", filename);
             org.apache.avro.Schema avroSchema = avroData.fromConnectSchema(schema);
+            org.apache.avro.Schema logicalTypeAvroSchema =
+                    AvroDataUtil.addLogicalTypeTo(avroSchema);
+
             writer = new AvroParquetWriter<>(
                 path,
-                avroSchema,
+                logicalTypeAvroSchema,
                 compressionCodecName,
                 blockSize,
                 pageSize,
